@@ -1,0 +1,10 @@
+COMMENT LOG
+
+
+<dir/file_name>
+	<commenter_name>
+	<line number_beginning-mm/dd/yy>
+
+~/postgresql-9.2.2.2/src/backend/storage/smgr/README
+	Will
+	14-03/xx/13

@@ -11,6 +11,15 @@ nor in any version of PostgreSQL.)  However, we retain the notion of a storage
 manager switch in case anyone wants to reintroduce other kinds of storage
 managers.
 
+/* WILL 3/20/13 6:15pm
+	* perhaps just make new storage manager as said above to manage 
+	* compression when reading or writing to storage? The documentation
+	* says that Postgres uses only the one type of storage manager, 
+	* but maintains the framework for additional to be used. Alternatively,
+	* we could just (de)compress at the point the storage manager
+	* is invoked in smgr.c. Decisions....
+	*/
+
 In Berkeley Postgres each relation was tagged with the ID of the storage
 manager to use for it.  This is gone.  It would be more reasonable to
 associate storage managers with tablespaces (a feature not present as this
