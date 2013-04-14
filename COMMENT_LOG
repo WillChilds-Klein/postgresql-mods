@@ -12,3 +12,7 @@ postgresql-mods/src/backend/storage/smgr/README
 postgresql-mods/src/backend/storage/smgr/smgr.c
 	Will
 	491-04/14/13
+
+postgresql-mods/src/backend/storage/smgr/md.c
+	Will
+	676-04/14/13

@@ -673,6 +673,9 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 
 	nbytes = FileRead(v->mdfd_vfd, buffer, BLCKSZ);
 
+	// ^^ point of read. implement decomp here, make sure to figure 
+	// out stuff with allocated block/buffer size.
+
 	TRACE_POSTGRESQL_SMGR_MD_READ_DONE(forknum, blocknum,
 									   reln->smgr_rnode.node.spcNode,
 									   reln->smgr_rnode.node.dbNode,
