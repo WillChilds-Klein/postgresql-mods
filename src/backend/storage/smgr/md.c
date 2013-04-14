@@ -31,6 +31,8 @@
 #include "utils/memutils.h"
 #include "pg_trace.h"
 
+/* GUC variables */
+int compression_algorithm = 0;
 
 /* intervals for calling AbsorbFsyncRequests in mdsync and mdpostckpt */
 #define FSYNCS_PER_ABSORB		10
