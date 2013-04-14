@@ -24,6 +24,8 @@
 #include "utils/hsearch.h"
 #include "utils/inval.h"
 
+/* GUC variables */
+int compression_algorithm = 0;
 
 /*
  * This struct of function pointers defines the API between smgr.c and

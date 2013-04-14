@@ -152,6 +152,9 @@
 
 #effective_io_concurrency = 1		# 1-1000; 0 disables prefetching
 
+# - Compression -
+
+#compression_algorithm = 0 # 0 = No compression.
 
 #------------------------------------------------------------------------------
 # WRITE AHEAD LOG

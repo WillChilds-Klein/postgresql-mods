@@ -3283,6 +3283,17 @@ static struct config_enum ConfigureNamesEnum[] =
 		XMLOPTION_CONTENT, xmloption_options,
 		NULL, NULL, NULL
 	},
+	
+	{
+	  {"compression_algorithm", PGC_USERSET, RESOURCES_DISK,
+	    gettext_noop("Sets the compression algorithm used to write to and read "
+	            "from disk."),
+	    NULL
+	  },
+	  &xmloption,
+	  XMLOPTION_CONTENT, xmloption_options,
+	  NULL, NULL, NULL
+	},
 
 
 	/* End-of-list marker */
