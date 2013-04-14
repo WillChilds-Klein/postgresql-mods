@@ -488,6 +488,15 @@ smgrextend(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 											   buffer, skipFsync);
 }
 
+/*	Will 4/14/13
+	* perhaps this is wehre we can piggy back on postgres's existing mechanisms for
+	* reading from and writing to disk...
+	*
+	*
+	*
+	*
+	*/
+
 /*
  *	smgrprefetch() -- Initiate asynchronous read of the specified block of a relation.
  */
