@@ -644,6 +644,8 @@ mdprefetch(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum)
 
 /*
  *	mdread() -- Read the specified block from a relation.
+ *
+ *  Edited by JME.
  */
 void
 mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
@@ -671,7 +673,13 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 				 errmsg("could not seek to block %u in file \"%s\": %m",
 						blocknum, FilePathName(v->mdfd_vfd))));
 
-	nbytes = FileRead(v->mdfd_vfd, buffer, BLCKSZ);
+  if (compression_algorithm == 0) {  // No compression; read whole block.
+    fprintf(stderr, "Compression-free read of block %zu.\n", blocknum);
+    nbytes = FileRead(v->mdfd_vfd, buffer, BLCKSZ);
+  } else { // Compression on; read as much as we need to.
+    fprintf(stderr, "Compression read.\n");
+    nbytes = FileRead(v->mdfd_vfd, buffer, 0);
+  }
 
 	// ^^ point of read. implement decomp here, make sure to figure 
 	// out stuff with allocated block/buffer size.
@@ -717,6 +725,8 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
  *		This is to be used only for updating already-existing blocks of a
  *		relation (ie, those before the current EOF).  To extend a relation,
  *		use mdextend().
+ *
+ *  Edited by JME.
  */
 void
 mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
@@ -742,6 +752,8 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	seekpos = (off_t) BLCKSZ *(blocknum % ((BlockNumber) RELSEG_SIZE));
 
 	Assert(seekpos < (off_t) BLCKSZ * RELSEG_SIZE);
+
+  fprintf(stderr, "About to write block %zu\n", blocknum);
 
 	if (FileSeek(v->mdfd_vfd, seekpos, SEEK_SET) != seekpos)
 		ereport(ERROR,
