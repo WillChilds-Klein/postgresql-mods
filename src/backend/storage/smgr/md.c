@@ -750,6 +750,8 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 						blocknum, FilePathName(v->mdfd_vfd))));
 
 	nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ);
+	// ^^ point of write to disk? perhaps find where FileWrite is defined?
+	// yeah, do that. imma do that.
 
 	TRACE_POSTGRESQL_SMGR_MD_WRITE_DONE(forknum, blocknum,
 										reln->smgr_rnode.node.spcNode,
