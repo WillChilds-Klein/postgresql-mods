@@ -623,6 +623,8 @@ mdclose(SMgrRelation reln, ForkNumber forknum)
 
 /*
  *	mdprefetch() -- Initiate asynchronous read of the specified block of a relation
+ *
+ *  JME: This function may have to change as well, or some other prefetching function.
  */
 void
 mdprefetch(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum)
@@ -680,7 +682,9 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
     fprintf(stderr, "Compression read.\n");
     nbytes = FileRead(v->mdfd_vfd, buffer, 0);
   }
-
+  
+  // Here is where we want to decompress the contents of buffer,
+  // and save them to buffer. -JME
 	// ^^ point of read. implement decomp here, make sure to figure 
 	// out stuff with allocated block/buffer size.
 
@@ -761,6 +765,12 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 				 errmsg("could not seek to block %u in file \"%s\": %m",
 						blocknum, FilePathName(v->mdfd_vfd))));
 
+  // Here is where we want to:
+  //  1) Have a switch statement check our compression algorithm,
+  //      and, if compression is turned on, compress the contents of buffer.
+  //  2) Store the size of the new buffer, if compression was turned on.
+  //  3) If compression is turned on, write the new buffer, otherwise, write buffer.
+  // -JME
 	nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ);
 	// ^^ point of write to disk? perhaps find where FileWrite is defined?
 	// yeah, do that. imma do that.
