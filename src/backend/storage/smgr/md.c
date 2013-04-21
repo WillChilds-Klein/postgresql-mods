@@ -31,8 +31,13 @@
 #include "utils/memutils.h"
 #include "pg_trace.h"
 
-/* GUC variables */
+#include "../../compression_libraries/miniz.c"
+
+/* GUC variable */
 int compression_algorithm = 0;
+
+/* Stores the compressed sizes of blocks. */
+uint32 block_sizes[200]; 
 
 /* intervals for calling AbsorbFsyncRequests in mdsync and mdpostckpt */
 #define FSYNCS_PER_ABSORB		10
@@ -656,6 +661,7 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	off_t		seekpos;
 	int			nbytes;
 	MdfdVec    *v;
+	unsigned long *dummy;
 
 	TRACE_POSTGRESQL_SMGR_MD_READ_START(forknum, blocknum,
 										reln->smgr_rnode.node.spcNode,
@@ -683,6 +689,22 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
     nbytes = FileRead(v->mdfd_vfd, buffer, 0);
   }
   
+  fprintf(stderr, "Decompressing with algorithm %d\n", compression_algorithm);
+  
+  switch (compression_algorithm) {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+    case 10:
+      mz_uncompress(buffer, dummy, buffer, block_sizes[blocknum]);
+      break;
+  }
   // Here is where we want to decompress the contents of buffer,
   // and save them to buffer. -JME
 	// ^^ point of read. implement decomp here, make sure to figure 
@@ -739,6 +761,8 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	off_t		seekpos;
 	int			nbytes;
 	MdfdVec    *v;
+	char *newBuffer;  // For storing the compressed data. -JME
+	
 
 	/* This assert is too expensive to have on normally ... */
 #ifdef CHECK_WRITE_VS_EXTEND
@@ -764,16 +788,36 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 				(errcode_for_file_access(),
 				 errmsg("could not seek to block %u in file \"%s\": %m",
 						blocknum, FilePathName(v->mdfd_vfd))));
-
+  
   // Here is where we want to:
   //  1) Have a switch statement check our compression algorithm,
   //      and, if compression is turned on, compress the contents of buffer.
   //  2) Store the size of the new buffer, if compression was turned on.
   //  3) If compression is turned on, write the new buffer, otherwise, write buffer.
   // -JME
-	nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ);
-	// ^^ point of write to disk? perhaps find where FileWrite is defined?
-	// yeah, do that. imma do that.
+  fprintf(stderr, "Compressing with algorithm %d\n", compression_algorithm);
+  
+  switch (compression_algorithm) {
+    case 0:
+      nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ);
+      break;
+    case 1: // miniz
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+    case 10:
+      mz_compress2(newBuffer, &(block_sizes[blocknum]), buffer, BLCKSZ, compression_algorithm);
+      //block_sizes[blocknum] = sizeof(newBuffer);
+      nbytes = FileWrite(v->mdfd_vfd, newBuffer, block_sizes[blocknum]);
+      break;
+    default: // error
+      elog(ERROR, "invalid compression type.");
+  }
 
 	TRACE_POSTGRESQL_SMGR_MD_WRITE_DONE(forknum, blocknum,
 										reln->smgr_rnode.node.spcNode,

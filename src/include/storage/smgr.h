@@ -55,8 +55,6 @@ typedef struct SMgrRelationData
 	BlockNumber smgr_targblock; /* current insertion target block */
 	BlockNumber smgr_fsm_nblocks;		/* last known size of fsm fork */
 	BlockNumber smgr_vm_nblocks;	/* last known size of vm fork */
-
-  uint compressed_size; /* Block compression size, added by JME. */
   
 	/* additional public fields may someday exist here */
 
