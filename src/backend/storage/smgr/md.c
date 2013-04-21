@@ -34,10 +34,10 @@
 #include "../../compression_libraries/miniz.c"
 
 /* GUC variable */
-int compression_algorithm = 0;
+int compression_algorithm = 1;
 
 /* Stores the compressed sizes of blocks. */
-uint32 block_sizes[200]; 
+uint32 block_sizes[200] = {[0 ... 199] = BLCKSZ};
 
 /* intervals for calling AbsorbFsyncRequests in mdsync and mdpostckpt */
 #define FSYNCS_PER_ABSORB		10
@@ -662,6 +662,61 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	int			nbytes;
 	MdfdVec    *v;
 	unsigned long *dummy; // JME
+	char *tempBuffer; // JME
+	
+	/*// For testing.
+	const char *s_pStr = "Test test tiddly testing.";
+  uint step = 0;
+  int cmp_status;
+  uLong src_len = (uLong)strlen(s_pStr);
+  uLong cmp_len = compressBound(src_len);
+  uLong uncomp_len = src_len;
+  uint8 *pCmp, *pUncomp;
+  uint total_succeeded = 0;
+  
+  
+  // START TESTING
+  pCmp = (mz_uint8 *)malloc((size_t)cmp_len);
+  pUncomp = (mz_uint8 *)malloc((size_t)src_len);
+
+  // Compress the string.
+  cmp_status = mz_compress2(pCmp, &cmp_len, (const unsigned char *)s_pStr, src_len, 0);
+  if (cmp_status != Z_OK)
+  {
+    printf("compress() failed!\n");
+    free(pCmp);
+    free(pUncomp);
+    elog(ERROR, "compression error.");
+  }
+
+  fprintf(stderr, "\nCompressed test data from %u to %u bytes\n", (mz_uint32)src_len, (mz_uint32)cmp_len);
+  fprintf(stderr, "COMPRESSED DATA: %s\t\tLENGTH: %d\n", pCmp, strlen(pCmp));
+
+  cmp_status = mz_uncompress(pUncomp, &uncomp_len, pCmp, cmp_len);
+  total_succeeded += (cmp_status == Z_OK);
+
+  if (cmp_status != Z_OK)
+  {
+    printf("uncompress failed!\n");
+    free(pCmp);
+    free(pUncomp);
+    return EXIT_FAILURE;
+  }
+
+  printf("Decompressed from %u to %u bytes\n", (mz_uint32)cmp_len, (mz_uint32)uncomp_len);
+
+  // Ensure uncompress() returned the expected data.
+  if ((uncomp_len != src_len) || (memcmp(pUncomp, s_pStr, (size_t)src_len)))
+  {
+    printf("Decompression failed!\n");
+    free(pCmp);
+    free(pUncomp);
+    return EXIT_FAILURE;
+  }
+
+  free(pCmp);
+  free(pUncomp);
+  // \END TESTING!!!!!!!!!!!!!!!!*/
 
 	TRACE_POSTGRESQL_SMGR_MD_READ_START(forknum, blocknum,
 										reln->smgr_rnode.node.spcNode,
@@ -684,33 +739,8 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
   if (compression_algorithm == 0) {  // No compression; read whole block.
     fprintf(stderr, "Compression-free read of block %zu.\n", blocknum);
     nbytes = FileRead(v->mdfd_vfd, buffer, BLCKSZ);
-  } else { // Compression on; read as much as we need to.
-    fprintf(stderr, "Compression read.\n");
-    nbytes = FileRead(v->mdfd_vfd, buffer, 0);
-  }
-  
-  fprintf(stderr, "Decompressing with algorithm %d\n", compression_algorithm);
-  
-  /*switch (compression_algorithm) {
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
-    case 10:
-      mz_uncompress(buffer, dummy, buffer, block_sizes[blocknum]);
-      break;
-  }*/
-  // Here is where we want to decompress the contents of buffer,
-  // and save them to buffer. -JME
-	// ^^ point of read. implement decomp here, make sure to figure 
-	// out stuff with allocated block/buffer size.
-
-	TRACE_POSTGRESQL_SMGR_MD_READ_DONE(forknum, blocknum,
+    
+    TRACE_POSTGRESQL_SMGR_MD_READ_DONE(forknum, blocknum,
 									   reln->smgr_rnode.node.spcNode,
 									   reln->smgr_rnode.node.dbNode,
 									   reln->smgr_rnode.node.relNode,
@@ -718,31 +748,61 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 									   nbytes,
 									   BLCKSZ);
 
-	if (nbytes != BLCKSZ)
-	{
-		if (nbytes < 0)
-			ereport(ERROR,
-					(errcode_for_file_access(),
-					 errmsg("could not read block %u in file \"%s\": %m",
-							blocknum, FilePathName(v->mdfd_vfd))));
+	  if (nbytes != BLCKSZ)
+	  {
+		  if (nbytes < 0)
+			  ereport(ERROR,
+					  (errcode_for_file_access(),
+					   errmsg("could not read block %u in file \"%s\": %m",
+							  blocknum, FilePathName(v->mdfd_vfd))));
 
-		/*
-		 * Short read: we are at or past EOF, or we read a partial block at
-		 * EOF.  Normally this is an error; upper levels should never try to
-		 * read a nonexistent block.  However, if zero_damaged_pages is ON or
-		 * we are InRecovery, we should instead return zeroes without
-		 * complaining.  This allows, for example, the case of trying to
-		 * update a block that was later truncated away.
-		 */
-		if (zero_damaged_pages || InRecovery)
-			MemSet(buffer, 0, BLCKSZ);
-		else
-			ereport(ERROR,
-					(errcode(ERRCODE_DATA_CORRUPTED),
-					 errmsg("could not read block %u in file \"%s\": read only %d of %d bytes",
-							blocknum, FilePathName(v->mdfd_vfd),
-							nbytes, BLCKSZ)));
-	}
+		  /*
+		   * Short read: we are at or past EOF, or we read a partial block at
+		   * EOF.  Normally this is an error; upper levels should never try to
+		   * read a nonexistent block.  However, if zero_damaged_pages is ON or
+		   * we are InRecovery, we should instead return zeroes without
+		   * complaining.  This allows, for example, the case of trying to
+		   * update a block that was later truncated away.
+		   */
+		  if (zero_damaged_pages || InRecovery)
+			  MemSet(buffer, 0, BLCKSZ);
+		  else
+			  ereport(ERROR,
+					  (errcode(ERRCODE_DATA_CORRUPTED),
+					   errmsg("could not read block %u in file \"%s\": read only %d of %d bytes",
+							  blocknum, FilePathName(v->mdfd_vfd),
+							  nbytes, BLCKSZ)));
+	  }
+  } else { // Compression on; read as much as we need to.
+    fprintf(stderr, "Compression read of block %zu.\n", blocknum);
+    tempBuffer = malloc(sizeof(buffer)*2);
+    nbytes = FileRead(v->mdfd_vfd, tempBuffer, block_sizes[blocknum]);
+    
+    fprintf(stderr, "Decompressing with algorithm %d\n", compression_algorithm);
+    
+    // POTENTIAL OPTIMIZATION HERE: CHECK IF tempBuffer IS EMPTY STRING.
+    
+    switch (compression_algorithm) {
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+      case 10:
+        fprintf(stderr, "Compressed data to decompress: %s\n", tempBuffer);
+        if (mz_uncompress(buffer, dummy, tempBuffer, block_sizes[blocknum]) != Z_OK) {
+          elog(ERROR, "could not decompress data.");
+        }
+        free(tempBuffer);
+        break;
+    }
+    
+    fprintf(stderr, "Data decompressed.\n");
+  }
 }
 
 /*
@@ -761,7 +821,7 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	off_t		seekpos;
 	int			nbytes;
 	MdfdVec    *v;
-	char *newBuffer;  // For storing the compressed data. -JME
+	char *tempBuffer;  // For storing the compressed data. -JME
 	
 
 	/* This assert is too expensive to have on normally ... */
@@ -789,38 +849,12 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 				 errmsg("could not seek to block %u in file \"%s\": %m",
 						blocknum, FilePathName(v->mdfd_vfd))));
   
-  // Here is where we want to:
-  //  1) Have a switch statement check our compression algorithm,
-  //      and, if compression is turned on, compress the contents of buffer.
-  //  2) Store the size of the new buffer, if compression was turned on.
-  //  3) If compression is turned on, write the new buffer, otherwise, write buffer.
-  // -JME
-  fprintf(stderr, "Compressing with algorithm %d\n", compression_algorithm);
-  nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ);
-  /*
-  switch (compression_algorithm) {
-    case 0:
-      nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ);
-      break;
-    case 1: // miniz
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
-    case 10:
-      mz_compress2(newBuffer, &(block_sizes[blocknum]), buffer, BLCKSZ, compression_algorithm);
-      //block_sizes[blocknum] = sizeof(newBuffer);
-      nbytes = FileWrite(v->mdfd_vfd, newBuffer, block_sizes[blocknum]);
-      break;
-    default: // error
-      elog(ERROR, "invalid compression type.");
-  }*/
-
-	TRACE_POSTGRESQL_SMGR_MD_WRITE_DONE(forknum, blocknum,
+  if (compression_algorithm == 0) { // No compression; proceed as usual.
+    fprintf(stderr, "Compression-free write of block %zu.\n", blocknum);
+  
+    nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ);
+    
+    TRACE_POSTGRESQL_SMGR_MD_WRITE_DONE(forknum, blocknum,
 										reln->smgr_rnode.node.spcNode,
 										reln->smgr_rnode.node.dbNode,
 										reln->smgr_rnode.node.relNode,
@@ -828,25 +862,55 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 										nbytes,
 										BLCKSZ);
 
-	if (nbytes != BLCKSZ)
-	{
-		if (nbytes < 0)
-			ereport(ERROR,
-					(errcode_for_file_access(),
-					 errmsg("could not write block %u in file \"%s\": %m",
-							blocknum, FilePathName(v->mdfd_vfd))));
-		/* short write: complain appropriately */
-		ereport(ERROR,
-				(errcode(ERRCODE_DISK_FULL),
-				 errmsg("could not write block %u in file \"%s\": wrote only %d of %d bytes",
-						blocknum,
-						FilePathName(v->mdfd_vfd),
-						nbytes, BLCKSZ),
-				 errhint("Check free disk space.")));
-	}
+	  if (nbytes != BLCKSZ)
+	  {
+		  if (nbytes < 0)
+			  ereport(ERROR,
+					  (errcode_for_file_access(),
+					   errmsg("could not write block %u in file \"%s\": %m",
+							  blocknum, FilePathName(v->mdfd_vfd))));
+		  /* short write: complain appropriately */
+		  ereport(ERROR,
+				  (errcode(ERRCODE_DISK_FULL),
+				   errmsg("could not write block %u in file \"%s\": wrote only %d of %d bytes",
+						  blocknum,
+						  FilePathName(v->mdfd_vfd),
+						  nbytes, BLCKSZ),
+				   errhint("Check free disk space.")));
+	  }
 
-	if (!skipFsync && !SmgrIsTemp(reln))
-		register_dirty_segment(reln, forknum, v);
+	  if (!skipFsync && !SmgrIsTemp(reln))
+		  register_dirty_segment(reln, forknum, v);
+  } else { // Compression is turned on.
+    fprintf(stderr, "Compressing block %zu.\n", blocknum);
+    
+    // POTENTIAL OPTIMIZATION HERE: CHECK IF buffer IS EMPTY STRING.
+    
+    tempBuffer = malloc(sizeof(buffer)*2);
+    
+    switch (compression_algorithm) {
+      case 1: // miniz
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+      case 10:
+        if (mz_compress2(tempBuffer, &(block_sizes[blocknum]), buffer, strlen(buffer), compression_algorithm) != Z_OK) {
+          elog(ERROR, "could not compress data.");
+        }
+        
+        nbytes = FileWrite(v->mdfd_vfd, tempBuffer, block_sizes[blocknum]); // Maybe use BLCKSZ.
+        break;
+      default: // error
+        elog(ERROR, "invalid compression type.");
+    }
+    
+    free(tempBuffer);
+  }
 }
 
 /*
