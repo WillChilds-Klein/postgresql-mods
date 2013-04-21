@@ -661,7 +661,7 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	off_t		seekpos;
 	int			nbytes;
 	MdfdVec    *v;
-	unsigned long *dummy;
+	unsigned long *dummy; // JME
 
 	TRACE_POSTGRESQL_SMGR_MD_READ_START(forknum, blocknum,
 										reln->smgr_rnode.node.spcNode,
@@ -691,7 +691,7 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
   
   fprintf(stderr, "Decompressing with algorithm %d\n", compression_algorithm);
   
-  switch (compression_algorithm) {
+  /*switch (compression_algorithm) {
     case 1:
     case 2:
     case 3:
@@ -704,7 +704,7 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
     case 10:
       mz_uncompress(buffer, dummy, buffer, block_sizes[blocknum]);
       break;
-  }
+  }*/
   // Here is where we want to decompress the contents of buffer,
   // and save them to buffer. -JME
 	// ^^ point of read. implement decomp here, make sure to figure 
@@ -796,7 +796,8 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
   //  3) If compression is turned on, write the new buffer, otherwise, write buffer.
   // -JME
   fprintf(stderr, "Compressing with algorithm %d\n", compression_algorithm);
-  
+  nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ);
+  /*
   switch (compression_algorithm) {
     case 0:
       nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ);
@@ -817,7 +818,7 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
       break;
     default: // error
       elog(ERROR, "invalid compression type.");
-  }
+  }*/
 
 	TRACE_POSTGRESQL_SMGR_MD_WRITE_DONE(forknum, blocknum,
 										reln->smgr_rnode.node.spcNode,
