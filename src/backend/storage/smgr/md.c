@@ -844,7 +844,7 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	off_t		seekpos;
 	int			nbytes;
 	MdfdVec    *v;
-	unsigned char *tempBuffer;  // For storing the compressed data. -JME
+	unsigned char *tempBuffer = NULL;  // For storing the compressed data. -JME
 	unsigned long uncompressedLength; // JME
 	unsigned long compressedBound; // JME
 	int compressStatus; // JME
@@ -882,8 +882,8 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
   } else { // Compression is turned on.
     fprintf(stderr, "\tCompressing block %zu.\n", blocknum);
     
-    if (buffer[0] == '\0') { // false disables this optimization.
-      nbytes = FileWrite(v->mdfd_vfd, buffer, 1); // Maybe use BLCKSZ.
+    if (false && buffer[0] == '\0') { // false disables this optimization.
+      nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ); // Maybe use BLCKSZ.
     } else {
       switch (compression_algorithm) {
         case 1: // miniz
@@ -912,8 +912,10 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
             fprintf(stderr, "\tError: could not compress data. (Error code %d)\n", compressStatus);
             fprintf(stderr, "\tWe're going to attempt to write buffer as-is.\n");
             
-            nbytes = FileWrite(v->mdfd_vfd, buffer, block_sizes[blocknum]); // Maybe use BLCKSZ.
+            nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ); // Maybe use BLCKSZ.
           } else {
+            fprintf(stderr, "COMPRESSED DATA: %s\t\tLENGTH: %d\n", tempBuffer, strlen((char *)tempBuffer));
+            
             nbytes = FileWrite(v->mdfd_vfd, (char *)tempBuffer, BLCKSZ); // Maybe use BLCKSZ.
           }
           
