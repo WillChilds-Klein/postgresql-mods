@@ -17,3 +17,681 @@ LOG:  received smart shutdown request
 LOG:  autovacuum launcher shutting down
 LOG:  shutting down
 LOG:  database system is shut down
+LOG:  database system was shut down at 2013-04-22 22:07:47 EDT
+LOG:  database system is ready to accept connections
+LOG:  autovacuum launcher started
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 4.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 5.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 6.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 4.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 5.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 6.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 7.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 8.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 9.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 10.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 11.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 12.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 13.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 14.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 15.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 16.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 7.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 17.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 18.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 4.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 19.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 7.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 11.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 14.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 18.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 45.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 26.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 7.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 4.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 14.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 5.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 41.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 15.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 10.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 19.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 21.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 27.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 9.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 2.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 1.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 3.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 15.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
+Entering mdread().
+	Compression read of block 0.
+	Decompressing with algorithm 1
+	Data decompressed.
+Exiting mdread().
