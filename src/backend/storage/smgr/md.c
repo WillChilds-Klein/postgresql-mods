@@ -34,10 +34,10 @@
 #include "../../compression_libraries/miniz.c"
 
 /* GUC variable */
-int compression_algorithm = 1;
+int compression_algorithm = 2;
 
 /* Stores the compressed sizes of blocks. */
-ulong block_sizes[200] = {[0 ... 199] = BLCKSZ};
+unsigned long block_sizes[200] = {[0 ... 199] = BLCKSZ};
 
 /* intervals for calling AbsorbFsyncRequests in mdsync and mdpostckpt */
 #define FSYNCS_PER_ABSORB		10
@@ -662,14 +662,14 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	int			nbytes;
 	MdfdVec    *v;
 	unsigned long compressedLength; // JME
-	unsigned long uncompressedBound; // JME
+	unsigned long uncompressedLength; // JME
 	unsigned char *tempBuffer; // JME
 	int uncompressStatus; // JME
 	
 	fprintf(stderr, "Entering mdread().\n");
 	
 	// For testing.
-	const char *s_pStr = "Sandwich. Sandwich. Sandwich. Sandwiches wahooo!";
+	const char *s_pStr = "Kartik and Jacob";
   uint step = 0;
   int cmp_status;
   uLong src_len = (uLong)strlen(s_pStr);
@@ -679,7 +679,8 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
   uint total_succeeded = 0;
   
   
-  /*// START TESTING
+  // START TESTING 
+  /*
   pCmp = (mz_uint8 *)malloc((size_t)cmp_len);
   pUncomp = (mz_uint8 *)malloc((size_t)src_len);
 
@@ -748,11 +749,12 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
     nbytes = FileRead(v->mdfd_vfd, buffer, BLCKSZ);
   } else { // Compression on; read as much as we need to.
     fprintf(stderr, "\tCompression read of block %zu.\n", blocknum);
-    nbytes = FileRead(v->mdfd_vfd, buffer, BLCKSZ); // Read the correct amount from disk; for now, a whole block.
+    tempBuffer = palloc(BLCKSZ); // Allocate tempBuffer to be "big enough." --Right now this is prolly too big.
+    nbytes = FileRead(v->mdfd_vfd, tempBuffer, BLCKSZ); // Read the correct amount from disk; for now, a whole block.
     
     fprintf(stderr, "\tDecompressing with algorithm %d\n", compression_algorithm);
     
-    if (buffer[0] != '\0') { // Don't operate on buffer if it's just a null character.
+    if (tempBuffer[0] != '\0') { // Don't operate on buffer if it's just a null character.
       switch (compression_algorithm) {
         case 1:
         case 2:
@@ -764,39 +766,45 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
         case 8:
         case 9:
         case 10:
-          compressedLength = strlen(buffer); // Store size of read buffer (excluding null character).
+          compressedLength = block_sizes[blocknum]; // Store size of read buffer (excluding null character).
           fprintf(stderr, "\tDetected compressedLength: %d\n", compressedLength);
           //fprintf(stderr, "\tUncompressedBound Val: %d\n", *uncompressedBound);
-          fprintf(stderr, "\tmz_compressBound output: %d\n", mz_compressBound(compressedLength));
-          uncompressedBound = mz_compressBound(compressedLength);
-          fprintf(stderr, "\tCalculated uncompressedBound: %d\n", uncompressedBound);
-          tempBuffer = palloc(uncompressedBound); // Allocate tempBuffer to be "big enough." --Right now this is prolly too big.
-          fprintf(stderr, "\tSize of original buffer: %d\n", compressedLength + 1);
-          fprintf(stderr, "\tCompressed data to decompress: %s\n", buffer);
-          char* c = buffer;
+          //fprintf(stderr, "\tmz_compressBound output: %d\n", mz_compressBound(compressedLength));
+          uncompressedLength = 0;//mz_compressBound(compressedLength);
+          //fprintf(stderr, "\tCalculated uncompressedBound: %d\n", uncompressedBound);
+          
+          //fprintf(stderr, "\tSize of original buffer: %d\n", compressedLength + 1);
+          //fprintf(stderr, "\tCompressed data to decompress: %s\n", buffer);
+          /*char* c = buffer;
           while (*c)
-            fprintf(stderr, "\t%d\n", *c++);
+            fprintf(stderr, "\t%d\n", *c++);*/
           
-          fprintf(stderr, "\tOld uncompressedBound: %d\n", uncompressedBound);
-          fprintf(stderr, "\tInput compressed buffer: %s\t\tLength: %d\n", buffer, strlen((char *)buffer));
+          int i = 0;
+          for (; i < 27; i++)
+            fprintf(stderr, "\t%d", buffer[i]);
+          fprintf(stderr, "\n");
+          
+          //fprintf(stderr, "\tOld uncompressedBound: %d\n", uncompressedBound);
+          //fprintf(stderr, "\tInput compressed buffer: %s\t\tLength: %d\n", buffer, strlen((char *)tempBuffer));
           // Decompress into tempBuffer.
-          uncompressStatus = mz_uncompress(tempBuffer, &uncompressedBound, (const unsigned char *)buffer, compressedLength);
-          fprintf(stderr, "\tDecompression successful!\n");
-          fprintf(stderr, "\tNew uncompressedBound: %d\n", uncompressedBound);
-          fprintf(stderr, "\tDecompressed tempBuffer: %s\t\tLength: %d\n", tempBuffer, strlen((char *)tempBuffer));
-          fprintf(stderr, "\tDecompressed from %u to %u bytes\n", (mz_uint32)compressedLength, (mz_uint32)strlen((char *)tempBuffer));
+          uncompressStatus = mz_uncompress(tempBuffer, &uncompressedLength, (const unsigned char *)buffer, 27);
+          fprintf(stderr, "\tDecompression attempt complete.\n");
+          fprintf(stderr, "\tUncompressed length: %d\n", uncompressedLength);
+          fprintf(stderr, "\tDecompressed buffer: %s\t\tLength: %d\n", buffer, strlen((char *)buffer));
+          fprintf(stderr, "\tDecompressed from %u to %u bytes\n", (mz_uint32)compressedLength, (mz_uint32)uncompressedLength);
           
-          if (uncompressStatus != MZ_OK && uncompressStatus != MZ_STREAM_END) {
+          if (uncompressStatus != MZ_OK) {
             fprintf(stderr, "\tError: could not decompress data (%s).\n", mz_error(uncompressStatus));
             fprintf(stderr, "\tWe're going to attempt to use buffer as-is.\n");
             fprintf(stderr, "\tThis is broken: %s\n", tempBuffer);
             pfree(tempBuffer);
           } else {
-            fprintf(stderr, "\ttempBuffer size: %d\n", strlen((char *)tempBuffer));
-            fprintf(stderr, "\ttempBuffer size to trim to: %d\n", uncompressedBound + 1);
-            repalloc(tempBuffer, uncompressedBound + 1); // Trim tempBuffer down to size.
-            pfree(buffer);  // Free original buffer.
-            buffer = (char *)tempBuffer;  // Set buffer equal to tempBuffer.
+            //fprintf(stderr, "\ttempBuffer size: %d\n", strlen((char *)tempBuffer));
+            //fprintf(stderr, "\ttempBuffer size to trim to: %d\n", uncompressedLength + 1);
+            //buffer = repalloc(buffer, uncompressedBound + 1); // Trim tempBuffer down to size.
+            //strncpy(buffer, tempBuffer, uncompressedBound); // Please work.
+            pfree(tempBuffer);  // Free original buffer.
+            //buffer[0] = '\0';
           }
           break;
         default:  // error
@@ -913,24 +921,27 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
         case 8:
         case 9:
         case 10:
-          //buffer = "Sandwich. Sandwich. Sandwich. Sandwiches wahooo!";
+          buffer = "Kartik and Jacob";
           uncompressedLength = strlen(buffer);
           
           fprintf(stderr, "\tData to compress: %s\t\tLength: %d\n", buffer, strlen((char *)buffer));
           fprintf(stderr, "\tSize of buffer: %d\n", uncompressedLength + 1);
           
-          compressedBound = mz_compressBound(uncompressedLength); // This can be smaller... compressBound is for going the opposite way.
+          //compressedBound = mz_compressBound(uncompressedLength); // This can be smaller... compressBound is for going the opposite way.
           tempBuffer = palloc(BLCKSZ); //palloc(compressedBound);
           
-          fprintf(stderr, "\tSize of tempBuffer: %d\n", compressedBound);
+          //fprintf(stderr, "\tSize of tempBuffer: %d\n", compressedBound);
           
           compressStatus = mz_compress2(tempBuffer, &(block_sizes[blocknum]), (const unsigned char *)buffer, uncompressedLength, compression_algorithm);
-          fprintf(stderr, "\tCompressed data from %u to %u bytes\n", (mz_uint32)uncompressedLength, (mz_uint32)block_sizes[blocknum]);
-          char* c = tempBuffer;
-          while (*c)
-            fprintf(stderr, "\t%d\n", *c++);
+          fprintf(stderr, "\tCompressed data from %u to %ld bytes\n", (mz_uint32)uncompressedLength, block_sizes[blocknum]);
           
-          if (compressStatus != MZ_OK && compressStatus != MZ_STREAM_END) {
+          fprintf(stderr, "\tCompression status: %d\n", compressStatus);
+          int i = 0;
+          for (; i < block_sizes[blocknum]; i++)
+            fprintf(stderr, "\t%d", tempBuffer[i]);
+          fprintf(stderr, "\n");
+          
+          if (compressStatus != MZ_OK) {
             fprintf(stderr, "\tError: could not compress data (%s).\n", mz_error(compressStatus));
             fprintf(stderr, "\tWe're going to attempt to write buffer as-is.\n");
             

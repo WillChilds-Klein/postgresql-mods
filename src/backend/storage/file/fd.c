@@ -1181,7 +1181,7 @@ FileRead(File file, char *buffer, int amount)
 
 retry:
 	returnCode = read(VfdCache[file].fd, buffer, amount);
-
+	
 	if (returnCode >= 0)
 		VfdCache[file].seekPos += returnCode;
 	else
