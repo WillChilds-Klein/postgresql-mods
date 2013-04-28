@@ -35,7 +35,7 @@
 #include "../../compression_libraries/quickLZ/quicklz.c"
 
 /* GUC variable */
-int compression_algorithm = 2;
+int compression_algorithm = 0;
 
 // temp storage structs for qlz. allocate on global scope and re-use -wck
 qlz_state_compress state_compress;
@@ -482,6 +482,8 @@ mdextend(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	int			nbytes;
 	MdfdVec    *v;
 
+  fprintf(stderr, "Entering mdextend()\n");
+
 	/* This assert is too expensive to have on normally ... */
 #ifdef CHECK_WRITE_VS_EXTEND
 	Assert(blocknum >= mdnblocks(reln, forknum));
@@ -519,28 +521,52 @@ mdextend(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 				(errcode_for_file_access(),
 				 errmsg("could not seek to block %u in file \"%s\": %m",
 						blocknum, FilePathName(v->mdfd_vfd))));
-
-	if ((nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ)) != BLCKSZ)
-	{
-		if (nbytes < 0)
-			ereport(ERROR,
-					(errcode_for_file_access(),
-					 errmsg("could not extend file \"%s\": %m",
-							FilePathName(v->mdfd_vfd)),
-					 errhint("Check free disk space.")));
-		/* short write: complain appropriately */
-		ereport(ERROR,
-				(errcode(ERRCODE_DISK_FULL),
-				 errmsg("could not extend file \"%s\": wrote only %d of %d bytes at block %u",
-						FilePathName(v->mdfd_vfd),
-						nbytes, BLCKSZ, blocknum),
-				 errhint("Check free disk space.")));
-	}
+  
+  if (compression_algorithm == 0) {  // No compression; proceed as normal.
+    if ((nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ)) != BLCKSZ)
+	  {
+		  if (nbytes < 0)
+			  ereport(ERROR,
+					  (errcode_for_file_access(),
+					   errmsg("could not extend file \"%s\": %m",
+							  FilePathName(v->mdfd_vfd)),
+					   errhint("Check free disk space.")));
+		  /* short write: complain appropriately */
+		  ereport(ERROR,
+				  (errcode(ERRCODE_DISK_FULL),
+				   errmsg("could not extend file \"%s\": wrote only %d of %d bytes at block %u",
+						  FilePathName(v->mdfd_vfd),
+						  nbytes, BLCKSZ, blocknum),
+				   errhint("Check free disk space.")));
+	  }
+  } else {
+    char *tempBuffer = palloc(BLCKSZ);
+    block_sizes[blocknum] = qlz_compress(buffer, tempBuffer, BLCKSZ, &state_compress);
+    if ((nbytes = FileWrite(v->mdfd_vfd, tempBuffer, BLCKSZ)) != BLCKSZ)
+	  {
+		  if (nbytes < 0)
+			  ereport(ERROR,
+					  (errcode_for_file_access(),
+					   errmsg("could not extend file \"%s\": %m",
+							  FilePathName(v->mdfd_vfd)),
+					   errhint("Check free disk space.")));
+		  /* short write: complain appropriately */
+		  ereport(ERROR,
+				  (errcode(ERRCODE_DISK_FULL),
+				   errmsg("could not extend file \"%s\": wrote only %d of %d bytes at block %u",
+						  FilePathName(v->mdfd_vfd),
+						  nbytes, BLCKSZ, blocknum),
+				   errhint("Check free disk space.")));
+	  }
+    pfree(tempBuffer);
+  }
 
 	if (!skipFsync && !SmgrIsTemp(reln))
 		register_dirty_segment(reln, forknum, v);
 
 	Assert(_mdnblocks(reln, forknum, v) <= ((BlockNumber) RELSEG_SIZE));
+	
+	fprintf(stderr, "Leaving mdextend()\n");
 }
 
 /*
@@ -666,6 +692,8 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	off_t		seekpos;
 	int			nbytes;
 	MdfdVec    *v;
+	
+	fprintf(stderr, "Entering mdread()\n");
 /*	unsigned long compressedLength; // JME
 	unsigned long uncompressedLength; // JME
 	unsigned char *tempBuffer; // JME
@@ -824,15 +852,26 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
     //  nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ); // Maybe use BLCKSZ.
     //} 
     //else{
-    	char* tempBuffer = palloc(block_sizes[blocknum]);
-    	FileRead(v->mdfd_vfd, tempBuffer, block_sizes[blocknum]);
-    	int decomp_size = qlz_decompress(tempBuffer, buffer, &state_decompress);
-    	fprintf(stderr, "DECODE: blocknum = %d, compressed size = %d, decompressed size = %d\n", blocknum, block_sizes[blocknum], decomp_size);
+      
     //}
     
    // fprintf(stderr, "\tData decompressed.\n");
-    nbytes = BLCKSZ; // THIS IS DANGEROUS! -JME
+   // nbytes = BLCKSZ; // THIS IS DANGEROUS! -JME
   //}
+  
+  if (compression_algorithm == 0) {  // No compression; read whole block.
+    nbytes = FileRead(v->mdfd_vfd, buffer, BLCKSZ);
+  } else {
+    fprintf(stderr, "STARTING DECODE\n");
+    fprintf(stderr, "\tDECODE allocated %d bytes.\n", block_sizes[blocknum]);
+    char* tempBuffer = palloc(BLCKSZ);
+    fprintf(stderr, "\tCheckpoint 1\n");
+    FileRead(v->mdfd_vfd, tempBuffer, BLCKSZ);
+    fprintf(stderr, "\tDECODE compressed string: '%s'\n", tempBuffer);
+    int decomp_size = qlz_decompress(tempBuffer, buffer, &state_decompress);
+    fprintf(stderr, "ENDING DECODE: blocknum = %d\tcompressed size = %d\tdecompressed size = %d\t\tstring: '%s'\n", blocknum, block_sizes[blocknum], decomp_size, buffer);
+    nbytes = BLCKSZ; // THIS IS DANGEROUS! -JME
+  }
   
   TRACE_POSTGRESQL_SMGR_MD_READ_DONE(forknum, blocknum,
 								   reln->smgr_rnode.node.spcNode,
@@ -868,7 +907,7 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 						  nbytes, BLCKSZ)));
   }
   
-  //fprintf(stderr, "Exiting mdread().\n");
+  fprintf(stderr, "Exiting mdread().\n");
 }
 
 /*
@@ -887,6 +926,9 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	off_t		seekpos;
 	int			nbytes;
 	MdfdVec    *v;
+	
+	fprintf(stderr, "Entering mdwrite()\n");
+	
 	/*unsigned char *tempBuffer = NULL;  // For storing the compressed data. -JME
 	unsigned long uncompressedLength; // JME
 	unsigned long compressedBound; // JME
@@ -978,15 +1020,22 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
       /**/ 
 
       // start quickLZ code
-      char* tempBuffer = palloc(BLCKSZ);
-      block_sizes[blocknum] = qlz_compress(buffer, (char *) tempBuffer, BLCKSZ, &state_compress);
-      fprintf(stderr, "ENDCODE: blocknum = %d, compressed size = %d\n", blocknum, block_sizes[blocknum]);
-      FileWrite(v->mdfd_vfd, buffer, block_sizes[blocknum]);
-      
-      pfree(tempBuffer);
-      nbytes = BLCKSZ; // THIS IS DANGEROUS! -JME
+      //buffer = "Will and Jacob";
+      //nbytes = BLCKSZ; // THIS IS DANGEROUS! -JME
     //}
   //}
+  
+  if (compression_algorithm == 0) { // No compression; proceed as usual.
+    nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ);
+  } else {
+    char* tempBuffer = palloc(BLCKSZ);
+    block_sizes[blocknum] = qlz_compress(buffer, tempBuffer, BLCKSZ, &state_compress);
+    fprintf(stderr, "ENCODE: blocknum = %d\tcompressed size = %d\tstring = '%s'\n", blocknum, block_sizes[blocknum], tempBuffer);
+    FileWrite(v->mdfd_vfd, tempBuffer, BLCKSZ);
+    fprintf(stderr, "Encode checkpoint\n");
+    pfree(tempBuffer);
+    nbytes = BLCKSZ; // THIS IS DANGEROUS! -JME
+  }
   
   TRACE_POSTGRESQL_SMGR_MD_WRITE_DONE(forknum, blocknum,
 									  reln->smgr_rnode.node.spcNode,
@@ -1016,7 +1065,7 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
   if (!skipFsync && !SmgrIsTemp(reln))
 	  register_dirty_segment(reln, forknum, v);
   
-  //fprintf(stderr, "Exiting mdwrite().\n");
+  fprintf(stderr, "Exiting mdwrite().\n");
 }
 
 /*
@@ -1096,6 +1145,8 @@ mdtruncate(SMgrRelation reln, ForkNumber forknum, BlockNumber nblocks)
 	BlockNumber curnblk;
 	BlockNumber priorblocks;
 
+  fprintf(stderr, "Entering mdtruncate()\n");
+
 	/*
 	 * NOTE: mdnblocks makes sure we have opened all active segments, so that
 	 * truncation loop will get them all!
@@ -1174,6 +1225,8 @@ mdtruncate(SMgrRelation reln, ForkNumber forknum, BlockNumber nblocks)
 		}
 		priorblocks += RELSEG_SIZE;
 	}
+	
+	fprintf(stderr, "Exiting mdtruncate()\n");
 }
 
 /*
