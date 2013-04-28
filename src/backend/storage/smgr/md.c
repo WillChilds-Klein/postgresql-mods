@@ -31,10 +31,15 @@
 #include "utils/memutils.h"
 #include "pg_trace.h"
 
-#include "../../compression_libraries/miniz.c"
+//#include "../../compression_libraries/miniz.c"
+#include "../../compression_libraries/quickLZ/quicklz.c"
 
 /* GUC variable */
 int compression_algorithm = 2;
+
+// temp storage structs for qlz. allocate on global scope and re-use -wck
+qlz_state_compress state_compress;
+qlz_state_decompress state_decompress;
 
 /* Stores the compressed sizes of blocks. */
 unsigned long block_sizes[200] = {[0 ... 199] = BLCKSZ};
@@ -661,14 +666,14 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	off_t		seekpos;
 	int			nbytes;
 	MdfdVec    *v;
-	unsigned long compressedLength; // JME
+/*	unsigned long compressedLength; // JME
 	unsigned long uncompressedLength; // JME
 	unsigned char *tempBuffer; // JME
 	int uncompressStatus; // JME
 	
 	fprintf(stderr, "Entering mdread().\n");
 	
-	// For testing.
+// For testing.
 	const char *s_pStr = "Kartik and Jacob";
   uint step = 0;
   int cmp_status;
@@ -676,7 +681,7 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
   uLong cmp_len = compressBound(src_len);
   uLong uncomp_len = src_len;
   uint8 *pCmp, *pUncomp;
-  uint total_succeeded = 0;
+  uint total_succeeded = 0;*/
   
   
   // START TESTING 
@@ -744,6 +749,7 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 				 errmsg("could not seek to block %u in file \"%s\": %m",
 						blocknum, FilePathName(v->mdfd_vfd))));
 
+  /** /
   if (compression_algorithm == 0) {  // No compression; read whole block.
     fprintf(stderr, "\tCompression-free read of block %zu.\n", blocknum);
     nbytes = FileRead(v->mdfd_vfd, buffer, BLCKSZ);
@@ -775,9 +781,9 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
           
           //fprintf(stderr, "\tSize of original buffer: %d\n", compressedLength + 1);
           //fprintf(stderr, "\tCompressed data to decompress: %s\n", buffer);
-          /*char* c = buffer;
-          while (*c)
-            fprintf(stderr, "\t%d\n", *c++);*/
+          //char* c = buffer;
+          //while (*c)
+          //  fprintf(stderr, "\t%d\n", *c++);
           
           int i = 0;
           for (; i < 27; i++)
@@ -811,10 +817,22 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
           elog(ERROR, "Invalid compression type.");
       }
     }
+    /**/
+
+    // start quickLZ code
+    //if(false && buffer[0] == '\0'){ // false disables this optimization.
+    //  nbytes = FileWrite(v->mdfd_vfd, buffer, BLCKSZ); // Maybe use BLCKSZ.
+    //} 
+    //else{
+    	char* tempBuffer = palloc(block_sizes[blocknum]);
+    	FileRead(v->mdfd_vfd, tempBuffer, block_sizes[blocknum]);
+    	int decomp_size = qlz_decompress(tempBuffer, buffer, &state_decompress);
+    	fprintf(stderr, "DECODE: blocknum = %d, compressed size = %d, decompressed size = %d\n", blocknum, block_sizes[blocknum], decomp_size);
+    //}
     
-    fprintf(stderr, "\tData decompressed.\n");
+   // fprintf(stderr, "\tData decompressed.\n");
     nbytes = BLCKSZ; // THIS IS DANGEROUS! -JME
-  }
+  //}
   
   TRACE_POSTGRESQL_SMGR_MD_READ_DONE(forknum, blocknum,
 								   reln->smgr_rnode.node.spcNode,
@@ -850,7 +868,7 @@ mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 						  nbytes, BLCKSZ)));
   }
   
-  fprintf(stderr, "Exiting mdread().\n");
+  //fprintf(stderr, "Exiting mdread().\n");
 }
 
 /*
@@ -869,12 +887,12 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 	off_t		seekpos;
 	int			nbytes;
 	MdfdVec    *v;
-	unsigned char *tempBuffer = NULL;  // For storing the compressed data. -JME
+	/*unsigned char *tempBuffer = NULL;  // For storing the compressed data. -JME
 	unsigned long uncompressedLength; // JME
 	unsigned long compressedBound; // JME
 	int compressStatus; // JME
 	
-  fprintf(stderr, "Entering mdwrite().\n");
+  fprintf(stderr, "Entering mdwrite().\n");*/
 	/* This assert is too expensive to have on normally ... */
 #ifdef CHECK_WRITE_VS_EXTEND
 	Assert(blocknum < mdnblocks(reln, forknum));
@@ -892,7 +910,7 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 
 	Assert(seekpos < (off_t) BLCKSZ * RELSEG_SIZE);
 
-  fprintf(stderr, "\tAbout to write block %zu\n", blocknum);
+ // fprintf(stderr, "\tAbout to write block %zu\n", blocknum);
 
 	if (FileSeek(v->mdfd_vfd, seekpos, SEEK_SET) != seekpos)
 		ereport(ERROR,
@@ -900,6 +918,7 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
 				 errmsg("could not seek to block %u in file \"%s\": %m",
 						blocknum, FilePathName(v->mdfd_vfd))));
   
+  /** /
   if (compression_algorithm == 0) { // No compression; proceed as usual.
     fprintf(stderr, "\tCompression-free write of block %zu.\n", blocknum);
   
@@ -955,12 +974,19 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
           break;
         default:  // error
           elog(ERROR, "Invalid compression type.");
-      }    
+      }   
+      /**/ 
+
+      // start quickLZ code
+      char* tempBuffer = palloc(BLCKSZ);
+      block_sizes[blocknum] = qlz_compress(buffer, (char *) tempBuffer, BLCKSZ, &state_compress);
+      fprintf(stderr, "ENDCODE: blocknum = %d, compressed size = %d\n", blocknum, block_sizes[blocknum]);
+      FileWrite(v->mdfd_vfd, buffer, block_sizes[blocknum]);
       
       pfree(tempBuffer);
       nbytes = BLCKSZ; // THIS IS DANGEROUS! -JME
-    }
-  }
+    //}
+  //}
   
   TRACE_POSTGRESQL_SMGR_MD_WRITE_DONE(forknum, blocknum,
 									  reln->smgr_rnode.node.spcNode,
@@ -990,7 +1016,7 @@ mdwrite(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
   if (!skipFsync && !SmgrIsTemp(reln))
 	  register_dirty_segment(reln, forknum, v);
   
-  fprintf(stderr, "Exiting mdwrite().\n");
+  //fprintf(stderr, "Exiting mdwrite().\n");
 }
 
 /*
